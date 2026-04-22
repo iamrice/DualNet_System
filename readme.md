@@ -4,6 +4,17 @@
 
 目标：使用streamlit框架，展示系统能力与效果。
 
+```
+
+运行方式：
+
+git clone https://github.com/iamrice/DualNet_System
+cd ./DualNet_System
+pip install -r requirements.txt
+streamlit run app.py
+
+```
+
 ## 首页：展示3个板块（页面）的关联
 
 关联：
