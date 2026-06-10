@@ -13,7 +13,7 @@ NS = {
 PRICE_GUIDANCE_SHEET = "双网调控-动态价格引导指数曲线"
 PEAK_LOAD_SHEET = "双网调控-电网峰值片区负荷曲线"
 TRAINING_CURVE_SHEET = "双网调控-训练迭代曲线"
-SUPPLEMENTAL_KPI_SHEET = "Sheet1"
+SUPPLEMENTAL_KPI_SHEET = "总指标&双网协同效果数据"
 TRAFFIC_DYNAMIC_SHEETS = {
     "平峰": "交通流调度-平峰场景动态时间块数据",
     "异常": "交通流调度-异常场景动态时间块数据",
@@ -35,18 +35,14 @@ TRAINING_CURVE_STEPS = 100
 
 def _excel_path() -> Path:
     root = Path(__file__).resolve().parent.parent
-    matches = list(root.glob("data*.xlsx"))
+    matches = list(root.glob("data_v2*.xlsx")) or list(root.glob("data*.xlsx"))
     if not matches:
         raise FileNotFoundError("未找到 data*.xlsx 数据文件")
     return matches[0]
 
 
 def _supplemental_excel_path() -> Path:
-    root = Path(__file__).resolve().parent.parent
-    matches = [path for path in root.glob("*.xlsx") if not path.name.startswith("data(")]
-    if not matches:
-        raise FileNotFoundError("未找到补充具体数据.xlsx 数据文件")
-    return matches[0]
+    return _excel_path()
 
 
 def _column_index(cell_ref: str) -> int:

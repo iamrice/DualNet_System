@@ -448,30 +448,20 @@ def make_radar_chart(df: pd.DataFrame) -> go.Figure:
 def make_synergy_radar_chart(data: dict[str, list[float]]) -> go.Figure:
     metrics = data["指标"]
     fig = go.Figure()
-    max_values = [
-        max(data["GEP"][index], data["CCRP"][index]) or 1
-        for index in range(len(metrics))
-    ]
     for name, color in [("GEP", COLORS["primary"]), ("CCRP", COLORS["orange"])]:
-        normalized = [
-            data[name][index] / max_values[index] * 100
-            for index in range(len(metrics))
-        ]
-        values = normalized + [normalized[0]]
-        raw_values = data[name] + [data[name][0]]
+        values = data[name] + [data[name][0]]
         fig.add_trace(go.Scatterpolar(
             r=values,
             theta=metrics + [metrics[0]],
             fill="toself",
             name=name,
             line=dict(color=color),
-            customdata=raw_values,
-            hovertemplate="%{theta}<br>%{fullData.name}: %{customdata:.4f}<br>归一化: %{r:.1f}<extra></extra>",
+            hovertemplate="%{theta}<br>%{fullData.name}: %{r:.4f}<extra></extra>",
         ))
     fig.update_layout(
         **LAYOUT_BASE,
         title="双网协同效果雷达图",
-        polar=dict(radialaxis=dict(visible=True, range=[0, 100], ticksuffix="%")),
+        polar=dict(radialaxis=dict(visible=True)),
         legend=dict(orientation="h", y=-0.1),
     )
     return fig
