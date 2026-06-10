@@ -118,7 +118,7 @@ def gen_uncertainty_scenarios() -> pd.DataFrame:
 
 
 # ─────────────────────────────────────────────
-# Page 3: 动态电价调控与交通流调度
+# Page 3: 动态价格调控与交通流调度
 # ─────────────────────────────────────────────
 
 def gen_grid_load(scenario: str = "平峰") -> pd.DataFrame:
@@ -148,8 +148,8 @@ def gen_electricity_price(scenario: str = "平峰") -> pd.DataFrame:
     price_after = price_before * rng.uniform(0.85, 0.98, 24)
     return pd.DataFrame({
         "小时": hours,
-        "博弈前电价 (元/kWh)": price_before.round(3),
-        "博弈后电价 (元/kWh)": price_after.round(3),
+        "博弈前价格 (元/kWh)": price_before.round(3),
+        "博弈后价格 (元/kWh)": price_after.round(3),
     })
 
 
@@ -212,25 +212,25 @@ def gen_game_convergence() -> pd.DataFrame:
 def gen_kpi_comparison(scenario: str = "平峰") -> dict:
     if scenario == "平峰":
         return {
-            "拥堵时间减少": 8.3,
-            "峰值负荷降低": 8.7,
-            "电价波动降低": 12.4,
-            "调度效率提升": 15.2,
+            "拥堵时间减少": 70.21,
+            "峰值负荷降低": 18.28,
+            "电网局部压力降低": 23.44,
+            "调度效率提升": 40.41,
         }
     else:
         return {
-            "拥堵时间减少": 9.1,
-            "峰值负荷降低": 10.2,
-            "电价波动降低": 18.6,
-            "调度效率提升": 21.3,
+            "拥堵时间减少": 52.67,
+            "峰值负荷降低": 63.56,
+            "电网局部压力降低": 19.44,
+            "调度效率提升": 38.85,
         }
 
 
 def gen_radar_comparison() -> pd.DataFrame:
-    metrics = ["拥堵减少", "负荷降低", "电价优化", "调度效率", "能耗节约", "碳排放减少"]
-    before = [0, 0, 0, 0, 0, 0]
-    after_normal = [8.3, 8.7, 12.4, 15.2, 9.6, 11.2]
-    after_anomaly = [9.1, 10.2, 18.6, 21.3, 13.4, 15.8]
+    metrics = ["拥堵减少", "负荷降低", "局部压力降低", "调度效率"]
+    before = [0, 0, 0, 0]
+    after_normal = [70.21, 18.28, 23.44, 40.41]
+    after_anomaly = [52.67, 63.56, 19.44, 38.85]
     return pd.DataFrame({
         "指标": metrics,
         "优化前": before,

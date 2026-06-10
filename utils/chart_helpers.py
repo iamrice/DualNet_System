@@ -120,13 +120,118 @@ def make_load_chart(df: pd.DataFrame) -> go.Figure:
 
 def make_price_chart(df: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df["小时"], y=df["博弈前电价 (元/kWh)"], name="博弈前",
+    fig.add_trace(go.Scatter(x=df["小时"], y=df["博弈前价格 (元/kWh)"], name="博弈前",
                              line=dict(color=COLORS["orange"], width=2, dash="dash")))
-    fig.add_trace(go.Scatter(x=df["小时"], y=df["博弈后电价 (元/kWh)"], name="博弈后",
+    fig.add_trace(go.Scatter(x=df["小时"], y=df["博弈后价格 (元/kWh)"], name="博弈后",
                              line=dict(color=COLORS["primary"], width=2)))
-    fig.update_layout(**LAYOUT_BASE, title="24小时动态电价曲线",
+    fig.update_layout(**LAYOUT_BASE, title="24小时动态价格曲线",
                       xaxis=dict(title="小时", tickvals=list(range(0, 24, 2))),
-                      yaxis_title="电价 (元/kWh)")
+                      yaxis_title="价格 (元/kWh)")
+    return fig
+
+
+def make_price_guidance_chart(series: dict[str, list[float]], title: str) -> go.Figure:
+    fig = go.Figure()
+    for name, values, color in [
+        ("非自适应", series["非自适应"], COLORS["orange"]),
+        ("自适应", series["自适应"], COLORS["primary"]),
+    ]:
+        fig.add_trace(go.Scatter(
+            x=list(range(len(values))),
+            y=values,
+            name=name,
+            mode="lines",
+            line=dict(color=color, width=2),
+        ))
+    layout_args = LAYOUT_BASE.copy()
+    layout_args.update({
+        "title": title,
+        "title_x": 0.02,
+        "title_y": 0.97,
+        "xaxis_title": "仿真步数",
+        "yaxis_title": "价格引导指数",
+        "xaxis": dict(range=[0, 769]),
+        "legend": dict(
+            orientation="h",
+            x=0.5,
+            xanchor="center",
+            y=1.03,
+            yanchor="bottom",
+        ),
+        "margin": dict(l=60, r=24, t=88, b=56),
+    })
+    fig.update_layout(**layout_args)
+    return fig
+
+
+def make_peak_load_chart(series: dict[str, list[float]], title: str) -> go.Figure:
+    fig = go.Figure()
+    for name, values, color in [
+        ("优化前", series["优化前"], "#7E57C2"),
+        ("优化后", series["优化后"], "#2E7D32"),
+    ]:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 60)),
+            y=values,
+            name=name,
+            mode="lines",
+            line=dict(color=color, width=2),
+        ))
+
+    layout_args = LAYOUT_BASE.copy()
+    layout_args.update({
+        "title": title,
+        "title_x": 0.02,
+        "title_y": 0.97,
+        "xaxis_title": "潮流计算步数",
+        "yaxis_title": "负荷（MW）",
+        "xaxis": dict(range=[1, 59], tickvals=list(range(1, 60, 8))),
+        "legend": dict(
+            orientation="h",
+            x=0.5,
+            xanchor="center",
+            y=1.03,
+            yanchor="bottom",
+        ),
+        "margin": dict(l=60, r=24, t=88, b=56),
+    })
+    fig.update_layout(**layout_args)
+    return fig
+
+
+def make_training_curve_chart(series: dict[str, list[float]]) -> go.Figure:
+    fig = go.Figure()
+    for name, values, color in [
+        ("avg", series["avg"], "#C62828"),
+        ("std", series["std"], "#00897B"),
+        ("max", series["max"], "#6D4C41"),
+    ]:
+        fig.add_trace(go.Scatter(
+            x=list(range(100)),
+            y=values,
+            name=name,
+            mode="lines",
+            line=dict(color=color, width=2),
+        ))
+
+    layout_args = LAYOUT_BASE.copy()
+    layout_args.update({
+        "title": "训练收敛过程",
+        "title_x": 0.02,
+        "title_y": 0.97,
+        "xaxis_title": "迭代轮数",
+        "yaxis_title": "适应度",
+        "xaxis": dict(range=[0, 99]),
+        "legend": dict(
+            orientation="h",
+            x=0.5,
+            xanchor="center",
+            y=1.03,
+            yanchor="bottom",
+        ),
+        "margin": dict(l=60, r=24, t=88, b=56),
+    })
+    fig.update_layout(**layout_args)
     return fig
 
 
@@ -152,6 +257,106 @@ def make_traffic_map(df: pd.DataFrame) -> go.Figure:
         mapbox=dict(style="carto-positron", center=dict(lat=31.25, lon=121.45), zoom=10),
         height=500,
     )
+    return fig
+
+
+def make_excel_traffic_map(records: list[dict], title: str) -> go.Figure:
+    fig = go.Figure()
+    if not records:
+        fig.update_layout(**LAYOUT_BASE, title=title)
+        return fig
+
+    max_flow = max(record["flow_count"] for record in records) or 1
+    center_lat = sum((r["edge_u_lat"] + r["edge_v_lat"]) / 2 for r in records) / len(records)
+    center_lon = sum((r["edge_u_lng"] + r["edge_v_lng"]) / 2 for r in records) / len(records)
+
+    congestion_bins = [
+        (0.0, 0.2, "rgba(46,125,50,0.78)"),
+        (0.2, 0.4, "rgba(124,179,66,0.78)"),
+        (0.4, 0.6, "rgba(251,192,45,0.78)"),
+        (0.6, 0.8, "rgba(239,108,0,0.82)"),
+        (0.8, 1.01, "rgba(198,40,40,0.86)"),
+    ]
+    width_bins = [
+        (0.0, 0.25, 1.0),
+        (0.25, 0.5, 2.0),
+        (0.5, 0.75, 3.4),
+        (0.75, 1.01, 5.0),
+    ]
+    grouped = {}
+
+    for record in records:
+        congestion = record["congestion_index"]
+        flow_ratio = record["flow_count"] / max_flow
+        color = next(color for low, high, color in congestion_bins if low <= congestion < high)
+        width = next(width for low, high, width in width_bins if low <= flow_ratio < high)
+        grouped.setdefault((color, width), {"lat": [], "lon": [], "text": []})
+        group = grouped[(color, width)]
+        group["lat"].extend([record["edge_u_lat"], record["edge_v_lat"], None])
+        group["lon"].extend([record["edge_u_lng"], record["edge_v_lng"], None])
+
+    for (color, width), group in grouped.items():
+        fig.add_trace(go.Scattermapbox(
+            lat=group["lat"],
+            lon=group["lon"],
+            mode="lines",
+            line=dict(width=width, color=color),
+            hoverinfo="skip",
+            showlegend=False,
+        ))
+
+    layout_args = LAYOUT_BASE.copy()
+    layout_args.update({
+        "title": title,
+        "mapbox": dict(
+            style="carto-positron",
+            center=dict(lat=center_lat, lon=center_lon),
+            zoom=11,
+        ),
+        "height": 620,
+        "margin": dict(l=10, r=10, t=54, b=10),
+    })
+    fig.update_layout(**layout_args)
+    return fig
+
+
+def make_traffic_congestion_heatmap(records: list[dict], top_n: int = 25) -> go.Figure:
+    edge_scores = {}
+    for record in records:
+        score = edge_scores.setdefault(record["edge_id"], {"total": 0.0, "count": 0})
+        score["total"] += record["congestion_index"]
+        score["count"] += 1
+
+    top_edges = sorted(
+        edge_scores,
+        key=lambda edge_id: edge_scores[edge_id]["total"] / edge_scores[edge_id]["count"],
+        reverse=True,
+    )[:top_n]
+    edge_rank = {edge_id: index for index, edge_id in enumerate(top_edges)}
+    matrix = [[0.0 for _ in range(25)] for _ in top_edges]
+
+    for record in records:
+        edge_index = edge_rank.get(record["edge_id"])
+        if edge_index is not None:
+            matrix[edge_index][record["block_id"]] = record["congestion_index"]
+
+    fig = go.Figure(go.Heatmap(
+        z=matrix,
+        x=list(range(25)),
+        y=top_edges,
+        colorscale="YlOrRd",
+        colorbar=dict(title="拥堵指数"),
+        hovertemplate="时间块: %{x}<br>边ID: %{y}<br>拥堵指数: %{z:.3f}<extra></extra>",
+    ))
+    layout_args = LAYOUT_BASE.copy()
+    layout_args.update({
+        "title": "高拥堵路段时间块热力图",
+        "xaxis_title": "时间块",
+        "yaxis_title": "边ID",
+        "height": 520,
+        "margin": dict(l=90, r=20, t=54, b=48),
+    })
+    fig.update_layout(**layout_args)
     return fig
 
 
@@ -203,8 +408,23 @@ def make_gauge(value: float, title: str, suffix: str = "%") -> go.Figure:
             "threshold": {"line": {"color": COLORS["red"], "width": 3}, "value": 8},
         },
     ))
-    fig.update_layout(**LAYOUT_BASE, height=200, margin=dict(l=20, r=20, t=40, b=10))
+
+    # ── 修复位置：避免参数解包冲突 ──
+    # 1. 拷贝一份基础布局参数字典
+    layout_args = LAYOUT_BASE.copy()
+    
+    # 2. 用自定义的值安全地覆盖/新增键值对
+    layout_args.update({
+        "height": 200,
+        "margin": dict(l=20, r=20, t=40, b=10)
+    })
+    
+    # 3. 将最终的参数字典一次性解包传给 update_layout
+    fig.update_layout(**layout_args)
+    
     return fig
+    # fig.update_layout(**LAYOUT_BASE, height=200, margin=dict(l=20, r=20, t=40, b=10))
+    # return fig
 
 
 def make_radar_chart(df: pd.DataFrame) -> go.Figure:
@@ -222,6 +442,38 @@ def make_radar_chart(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(**LAYOUT_BASE, title="双网协同优化效果雷达图",
                       polar=dict(radialaxis=dict(visible=True, range=[0, 25])),
                       legend=dict(orientation="h", y=-0.1))
+    return fig
+
+
+def make_synergy_radar_chart(data: dict[str, list[float]]) -> go.Figure:
+    metrics = data["指标"]
+    fig = go.Figure()
+    max_values = [
+        max(data["GEP"][index], data["CCRP"][index]) or 1
+        for index in range(len(metrics))
+    ]
+    for name, color in [("GEP", COLORS["primary"]), ("CCRP", COLORS["orange"])]:
+        normalized = [
+            data[name][index] / max_values[index] * 100
+            for index in range(len(metrics))
+        ]
+        values = normalized + [normalized[0]]
+        raw_values = data[name] + [data[name][0]]
+        fig.add_trace(go.Scatterpolar(
+            r=values,
+            theta=metrics + [metrics[0]],
+            fill="toself",
+            name=name,
+            line=dict(color=color),
+            customdata=raw_values,
+            hovertemplate="%{theta}<br>%{fullData.name}: %{customdata:.4f}<br>归一化: %{r:.1f}<extra></extra>",
+        ))
+    fig.update_layout(
+        **LAYOUT_BASE,
+        title="双网协同效果雷达图",
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100], ticksuffix="%")),
+        legend=dict(orientation="h", y=-0.1),
+    )
     return fig
 
 

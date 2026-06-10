@@ -53,7 +53,7 @@ st.markdown("#### 系统模块关联")
 st.markdown("""
 > **页面1** 提供数据驱动的双网能耗预测模型，为后续优化提供模型支撑 →
 > **页面2** 基于预测结果进行鲁棒性充电站选址，为协同调度提供场景支撑 →
-> **页面3** 综合前两页成果，实现动态电价调控与交通流协同调度
+> **页面3** 综合前两页成果，实现动态价格调控与交通流协同调度
 """)
 
 st.markdown("---")
@@ -101,16 +101,16 @@ with col3:
     st.markdown("""
 <div class="module-card">
   <div class="module-badge">模块 3 · 调度层</div>
-  <div class="module-title">🔄 动态电价调控与公共交通流调度</div>
+  <div class="module-title">🔄 动态价格调控与公共交通流调度</div>
   <p style="color:#37474F;font-size:0.9rem;">
-    基于协同与博弈理论，设计自适应动态电价策略与大规模新能源公共交通流调度算法，
+    基于协同与博弈理论，设计自适应动态价格策略与大规模新能源公共交通流调度算法，
     实现电网与路网的双网平衡，落脚于城市级交通与电力系统的协同优化。
   </p>
   <div class="module-metric">✅ 城市交通拥堵时间减少 8%+</div>
   <div class="module-metric">✅ 电网峰值负荷降低 8%+</div>
 </div>
 """, unsafe_allow_html=True)
-    st.page_link("pages/3_动态电价调控与交通流调度.py", label="进入页面 3 →", icon="🔄")
+    st.page_link("pages/3_动态价格调控与交通流调度.py", label="进入页面 3 →", icon="🔄")
 
 st.markdown("---")
 
